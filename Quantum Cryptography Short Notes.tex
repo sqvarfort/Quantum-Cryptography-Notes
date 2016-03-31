@@ -1,0 +1,866 @@
+\input{../../UCLHeader.tex}
+\input{../../UCLCommands.tex}
+\begin{document}
+\title{Quantum Cryptography -- Short Notes}
+\author{Sofia Qvarfort}
+\maketitle
+\tableofcontents
+\section{Introduction}
+\begin{description}
+\item[Condition for information-theoretic security] achieved if
+\beq
+P(y|x) = P(y)
+\eeq
+where $x$ is the message and $y$ is the codeword. 
+
+Interpretation: A probability distribution for $y$ conditioned on $x$ must only contain information about $y$ and no information about $x$. 
+
+\item[Shannon's Theorem] states that for a secret key $\cal{K}$, a plaintext $\cal{X}$ and the ciphertext $\cal{Y}$, it follows that
+\beq
+|\cal{K}|\geq  |\cal{Y}| \geq |\cal{X}|
+\eeq
+Interpretation: To have perfect security, we must share a key as long as the message. 
+
+Consequences: Very inconvenient to have perfect security by this method since the key must be very long. 
+
+\item[Public-key cryptography] uses one public key and one private key. The public key is distributed and used for encryption, while the private key is secret and is used for decoding only. 
+
+\item[RSA] is a form of public-key cryptography. The private key is two integers $(a,b)$ and the public key is their product $a\cdot b = c$. It is conjectured to be computationally hard to obtain $a$ and $b$, hence RSA is secure. 
+
+However, it relies on two assumptions:
+\begin{itemize}
+\item Computational power limitations of the adversary
+\item Unproven mathematical conjectures
+\end{itemize}
+
+\end{description}
+\section{Quantum Key Distribution}
+\begin{description}
+\item[Idea] to have secure transfer of a secret key that can then be used for communication. 
+
+Alice randomly prepares photons in either the $Z$ or the $X$ basis with probability $1/2$. Bob chooses a measurement basis with probability $1/2$ and measures the particle. Thus, about $1/2$ of the total photons will be used for the key. 
+
+\begin{figure}[h]
+\centering
+\includegraphics[width = 1.2\textwidth]{./QKD.PNG}
+\caption{Quantum Key Distribution setup.}
+\end{figure}
+
+
+\item[Vertical polarisation] corresponds to the states $\ket{0}$ and $\ket{1}$. 
+
+\item[Horizontal polarisation] corresponds to the states $\ket{+}$ and $\ket{-}$. 
+
+\item[Knowledge of adversary] Eve similarly chooses a measurement basis with probability $1/2$. Thus, with probability $1/4$ she learns something about the key. This is not very good. 
+
+
+\item[Privacy amplification] can be used to improve the security of the resulting key. It transforms the $N$-bit string into an $(N-S)$-bit string, whose distance from the ideal, completely secure string is $e^{-S}$. 
+
+\end{description}
+\subsection{State discrimination}
+Here we derive the error of discriminating between two states $\rho_0$ and $\rho_1$. We are given each state with probability $p_0$ or $p_1$ such that $p_0 + p_1 = 1$. 
+
+Consider choosing a POVM with elements $A_0$ and $A_1$, where $A_0 + A_1 = 1$ that would optimally distinguish between these two states. The probability of successfully distinguishing the state is
+\beq
+p_{success} = p_0P(A_0|\rho_0 ) + p_1 P(A_1|\rho_1)
+\eeq
+However, the probability of failure (that is, using the wrong POVM element) is
+\begin{align}
+p_{error} &= p_0 P(A_1|\rho_0) + p_1 P(A_0 |\rho_1) \\
+&= p_0 \trace{A_1 \rho_0} + p_1 \trace{A_0 \rho_1} \\
+&= p_0 \trace{A_1 \rho_0 } + p_1 \trace{\identity - A_1 \rho_1 } \\
+&= p_1 + \trace{A_1 M}
+\end{align}
+where $M = p_0 \rho_0 - p_1 \rho_1$. Let
+\beq
+M = \sum_k \lambda_k \ket{\phi_k}\bra{\phi_k}
+\eeq
+The $A_1$ that minimises $p_{error}$ is that which projects onto the negative eigenvalues of $M$. So then, 
+\beq
+p_{error} = p_1 + \sum_{k : \lambda_k<0} \lambda_k
+\eeq
+We now want to replace the expression for the negative eigenvalues with something better. We know that 
+\beq
+\norm{M}_1 = \sum_k |\lambda_k| = \sum_{k : \lambda_k \geq 0} \lambda_k - \sum_{k : \lambda_k <0} \lambda_k
+\eeq
+We also know that 
+\beq
+\trace{M} = p_0 \trace{\rho_0} - p_1 \trace{\rho_1} = p_0 - p_1 = \sum_k \lambda_k
+\eeq
+Thus, we find
+\beq
+p_0 - _1 - \norm{M}_1 = 2 \sum_{k : \lambda_k<0} \lambda_k
+\eeq
+And finally, we can write
+
+\beq
+p_{error} = \frac{1}{2} - \frac{1}{2} \norm{M}_1 = \frac{1}{2} - \frac{1}{2}\norm{p_0 \rho_0 - p_1 \rho_1}_1
+\eeq
+
+This is the final failure probability. Note that orthogonal states have zero failure probability, because their norm (their distance) is maximised. 
+
+
+\subsection{Optimal individual attacks}
+
+\begin{description}
+\item[Individual attack] means that Eve interacts with and measures each photon separately. 
+
+\item[Coherent attack] another name of individual attack. 
+
+\item[Result comparison] Alice and Bob choose a subset of their results with matching basis and compare them publicly. Any discrepancy is assumed to be due to an adversary listening in on the channel. 
+
+\item[Disturbance] usually denoted $D$ is the disturbance caused by Eve and detected by Alice and Bob.
+
+\item[Symmetries] Eve will use symmetries in her attack that match those in Alice's and Bob's protocol. That is, it is symmetric under $0 \leftrightarrow 1$ and $Z \leftrightarrow X$. 
+
+Question: I am not entirely sure what the symmetries mean. The $Z-X$ symmetry means that the disturbance should the same regardless of the axis that Eve chooses. 
+
+\item[The optimal attack] is a symmetric attack where Eve lets her quantum system interact with the states that Alice and Bob send through the channel. Eve will wait until Alice and Bob publish the measurement bases that they used, so that we then will have to distinguish the states that she has. For example, if Alice prepares in the $Z$ basis, Eve will have to distinguish the states
+\begin{align}
+\rho_0 &= F \ket{E_{00}} \bra{E_{00}} + D \ket{E_{01}}\bra{E_{01}} \\
+\rho_1 & = F \ket{E_{11}}\bra{E_{11}}  + D\ket{E_{10}}\bra{E_{10}}
+\end{align}
+These are mixed states, because Eve does not know whether she has $E_{00}$ or $E_{01}$. Thus, the best situation arises when
+\beq
+\braket{E_{00}|E_{10}} = \braket{E_{01}|E_{11}} = 0
+\eeq
+This will however not make the probability of failure zero. 
+
+I guess that this optimal attack requires Eve to have a pretty good quantum memory.
+
+\item[Failure probability] is the average of the $F$ event and the $D$ event. 
+\beq
+p_{error} = \frac{1}{2} \left( 1 - F\sqrt{1-\alpha^2} - D\sqrt{1- \beta^2} \right)
+\eeq
+Using Lagrange multipliers, we find
+\beq
+\alpha = \beta = 1 - 2D
+\eeq
+as the optimal solutions, which gives
+\beq
+p_{error} = \frac{1}{2} - \sqrt{D(1-D)}
+\eeq
+Note that $p_{error} = 0$ for $D = 1/2$. 
+
+
+\item[Strategy] $D=1/2$ also causes the key that Alice and Bob create to be completely useless. They will know that Eve is listening to everything. Thus, the best strategy for Eve is to pretend to be noise. Alice and Bob can never distinguish between actual noise and the interferences caused by Eve. 
+
+
+\end{description}
+\section{Shannon Information Theory}
+\begin{description}
+
+\item[Relative frequency] the number of times a letter $x$ in a sequence with $N$ letters from the alphabet $1\ldots d$ appears is $N(i)$. The relative frequency is therefore 
+\beq
+\nu(x) = \frac{N(x)}{N}
+\eeq
+That is, it answers the question: How many times does this letter appear in a sequence of $N$ letters? 
+
+It is bounded from above by 
+\beq
+|\{\nu(x)\}| \leq (N+1)^d
+\eeq
+for an alphabet of size $d$. 
+
+Question: I understand how $N^d$ would be the highest possible frequency if I had say $xxxx\ldots x$ $N$ times. But why $N +1$? 
+
+Answer: We count from 0. 
+
+\item[Number of sequences] called $\Omega$ with relative frequency $\nu(x)$ is 
+\beq
+\Omega(\nu(x)) = \bpmat N \\ N(1) \ldots N(d) \epmat = \frac{N!}{\prod_x N(x)!}
+\eeq
+which by Stirling's approximation, 
+\beq
+n! = \sqrt{2\pi n} \left( \frac{n}{e} \right)^n 
+\eeq
+becomes
+\beq
+\Omega(\nu(x)) = \sqrt{\frac{2\pi N}{\prod_x 2 \pi N \nu(x) }} 2^{NH(\nu)}
+\eeq
+
+\item[Shannon entropy] defined as
+\beq
+H(\nu) = H(X) = - \sum_x \nu(x) \log{\nu(x)}
+\eeq
+
+Question: Why are we considering the relative frequency here, instead of the probability distribution?  After all, isn't frequency dimension-full? Well, not in this case because we have defined everything in terms of numbers. 
+
+\item[Probability of sampling] the probability that a sequence with frequency $\nu(x)$ is sampled from a source with distribution $q(x)$ is
+\beq
+P(\nu(x)|q(x))  = \Omega(\nu(x)) \prod_x q(x) ^{N \nu(x)} = 2^{-ND(\nu|z)}
+\eeq
+
+Interpretation: We multiply the number of possible sequences by the product of all probabilities to the power of $N \nu(x)$. Recall that 
+\beq
+N \nu(x) = N(x)
+\eeq
+So the combined probability to the power of the number of letters that we get? 
+
+Question: This is not clear to me. 
+
+\item[Relative entropy] defined as
+\beq
+D(\nu|q) = \sum_x \nu(x) \log{\frac{\nu(x)}{q(x)}}
+\eeq
+
+
+\item[Infinitesimal variations] if there is a small difference between the entropies such that
+\beq
+\nu(x) = q(x) + \delta(x)
+\eeq
+we can show that the conditional probability distribution is Gaussian, 
+\beq
+P(q + \delta|q) = 2^{- \frac{N}{2} \sum_x \frac{\delta(x)^2}{q(x)}}
+\eeq
+So if we sampled $\nu(x)$, it would be distributed by average $1/\sqrt{N}$ around $q(x)$. 
+
+\item[Typical sequences] These are the sequences most likely to be chosen from a random distribution. 
+
+\item[Probability of typical sequence] is $2^{- NH(\nu)}$. 
+
+\end{description}
+
+\subsection{Randomness distillation}
+\begin{description}
+\item[Randomness distillation] can also be thought of as compression. We compress all the information that is not random. We cannot compress a truly random distribution -- it has maximum entropy. 
+
+\item[i.i.d] means independent and identically distributed. It is given by 
+\beq
+P(x_1, x_2 \ldots x_N) = P(x_1) P(x_2) \ldots P(x_N)
+\eeq
+
+\item[Number of typical sequences] is $2^{N H(X)}$. If they all occur with the same probability, this probability is $P(X) = e^{- NH(X)}$. 
+
+\item[Compression] we can index every typical sequence by one of the sequences of an $M$-bit string. Then
+\beq
+2^M = 2^{NH(X)}
+\eeq
+So we only need $M = NH(X)$ bits. 
+
+\item[Entropy] interpretation is: The number of bits of memory required to store each letter $X$ is $H(X)$. It is also the number of bits of perfect randomness distillable from each letter $X$. 
+
+\end{description}
+
+\subsection{Privacy Amplification}
+\begin{description}
+
+\item[Key idea] Consider the key created in the QKD protocol. Eve might have gained some information about the key, but we want to post-process the key so that Alice and Bob ensure that the key is safe. 
+
+\item[Information about initial data] that Eve has can be written 
+\beq
+P(x_1, z_1 \ldots x_N, z_N) = P(x_1, z_1) \ldots P(x_N, z_N)
+\eeq
+That is, each $z_i$ will tell us a little about Alice's $x_i$. 
+
+\item[Conditional entropy] derivation. 
+
+How much does Eve know about $x_1, x_2\ldots x_N$ if she has observed the sequence $\bar{z}_1, \bar{z}_2 \ldots \bar{z}_N$? How many sequences $(x_1,\ldots x_N)$ are compatible with $(\bar{z}_1 \ldots \bar{z}_N$? 
+
+Question: exactly what do we mean by `compatible'? 
+
+The number of 1s in $\bar{z}_1 \ldots \bar{z}_N$ is roughly $NP(Z=1)$. 
+
+The number of $z$s in $\bar{z}_1 \ldots \bar{z}_N$ is roughly $NP(Z= z)$. 
+
+Consider now only the subsequences, chosen from $(x_1, z_1) \ldots (x_N, z_N)$. Take only the sequences where $z_i = 1$ and combine them. They have length $NP(Z = 1)$. The probability distribution for $x$ is 
+\beq
+P(x|Z = 1)
+\eeq
+
+Then, with high probability, the number of subspaces with $Z_i = 1$ is
+\beq
+2^{NP(Z=1)H(X|Z=1)}
+\eeq
+and the same goes for any other subspace with $Z_i = z$. Then the total number of the full sequence is the product of the above. We are multiplying together all the subsequences for certain $Z$. 
+\beq
+\prod_x 2^{NP(Z=z)H(Z|Z= z)} = 2^{NH(X|Z)}
+\eeq
+
+\item[Conditional entropy] is defined as
+\beq
+H(X|Z) = \sum_z P(Z=z)H(x|Z=z)
+\eeq
+This describes the ignorance that Eve has about $X$, given that she has information about $Z$. 
+
+Recall that $Z$ is the entire distribution of $z$, it is the set of possible values for $z$.
+
+Note that we say that Eve's sequence is different from the ideal sequence because of real world Gaussian sampling etc. (I think this is the reason). 
+
+\item[Compression to restrict information] Let Alice compress her information $(x_1, \ldots x_N) \rightarrow (k_1 \ldots k_M)$ so that Eve's distribution $(\bar{z}_1 \ldots \bar{z}_N$ using some function $f$. 
+
+Let $f$ be uniform. Then, the probability of it mapping two specific sequences $(x_1 \ldots x_N)$ into the same $(k_1 \ldots k_M)$ is $2^{-M}$. That is because there are $2^M$ typical sequences. So, given that I have already mapped one sequence to the sequence $k_1 \ldots k_M$, the probability that I choose another one to map to the same sequence is $2^{-M}$. 
+
+Then, since Eve has $2^{NH(X|Z)}$ strings that are compatible with Alice's string, the probability that two strings have the same compression image is
+\beq
+2^{NH(X|Z)- M}
+\eeq
+I want this probability to go to zero, because then the number of compatible strings that Eve has goes to zero. 
+
+Question: I think that the above is the number of compatible strings, is that right? 
+
+If we choose
+\beq
+M= NH(X|Z) - \sqrt{N}
+\eeq
+the rate goes to zero as $N \rightarrow \infty$. 
+
+\item[Summary of privacy amplification] We only need a function that uniformly randomly compresses our information into certain bit strings. 
+
+\end{description}
+\subsection{Error correction}
+\begin{description}
+\item[Key idea] Let us say that Alice and Bob are trying to create a secret key. But let's also say that there are some errors, so that knowing $(y_1 \ldots y_N)$ does not give us perfect information about $(x_1 \ldots x_N)$. So, there are a number of $2^{NH(X|Y)}$ compatible sequences. 
+
+Let Bob ignore which of these sequences Alice has. Question: Why? 
+
+Let Alice then send Bob some partial information about her string. It is obtained from her string through some function $g$ such that $g(s_1 \ldots x_N) = (c_1 \ldots c_L)$, where we choose
+\beq
+L = NH(X|Y) + \sqrt{N}
+\eeq
+Then, what is the probability that two of the $2^{NH(X|Y)}$ sequences is mapped to the same $(c_1 \ldots c_L)$? Basically, if two separate sequences were mapped to the same one, it would not be possible for Bob to find out which sequence Alice has -- there wouldn't be a one-to-one relationship. 
+
+The probability for two strings being mapped onto the same $C$ is 
+\beq
+2^{NH(X|Y) - L} = 2^{- \sqrt{N}}
+\eeq
+which tends to zero as $N \rightarrow \infty$. 
+
+Question: Is this basically Schumacher compression? 
+
+Question: How would this correct for errors? 
+
+Answer: Say that the errors caused some misinformation on Bob's side. The additional information will complement it so that the key is perfectly shared. 
+
+\end{description}
+\subsection{Post-processing in secret key distribution}
+\begin{description}
+\item[Key idea]: We now combine error correction and privacy amplification. The goal is for Alice and Bob to end up with \emph{the same} string $(x_1\ldots x_N)$ with high probability. 
+
+\item[Error correction] Alice wants to correct Bob's errors. She sends
+\beq
+L = NH(X|Y) + \sqrt{N}
+\eeq
+bits of information $(c_1 \ldots c_L)$ to Bob. 
+
+This ensures that Bob also has string $(x_1 \ldots x_N)$. 
+
+Eve also gains this information. She now knows that the correct string is among $2^{NH(X|Z) - L}$ strings that she may consider. That is, performing error correction publicly means that Eve can discard $2^{-L}$ of her strings... I think. 
+
+
+\item[Privacy amplification] Both Alice and Bob compress their information using $f$ into $(k_1 \ldots k_M)$. We now want to remove the information that Eve could have gained form the privacy amplification as well. 
+
+So, we must choose to compress to 
+\beq
+M = NH(X|Z) - L - \sqrt{N} = - 2 \sqrt{N}
+\eeq
+bits. Doing this ensures that the key is secure.
+
+\item[Final asymptotic efficiency rate] is given by 
+\beq
+H(X|E) - H(X|Y)
+\eeq
+This s the number of perfect secret bits per raw bit sent sent in QKD. 
+
+\end{description}
+
+\subsection{Secret key rate of BB84}
+\begin{description}
+
+\item[This is a long section] that I don't think we went through. 
+
+
+\item[The secret key rate] is
+\beq
+r = H(X|Z,T) - H(X|Y)
+\eeq
+where $Z$ and $T$ belong to Eve and are part of the post-processing mechanics. 
+
+
+\end{description}
+
+\section{More Quantum Key Distribution}
+\begin{description}
+\item[The optimal cloning machine] corresponds to the optimal individual attack on a protocol that uses the $X,Y$ and $Z$ bases. It copies $\ket{\psi} \ket{0}\ket{0} \rightarrow \ket{\psi} \ket{\psi} \ket{\psi} $ with $5/6$ fidelity. 
+
+\item[State purification] Given a mixed state
+\beq
+\rho_A = \sum_j \lambda_j \ket{a_j}\bra{a_j}
+\eeq
+a purification is a bipartite state of the form 
+\beq
+\ket{\psi}_{AE} = \sum_j \sqrt{\lambda_j} \ket{a_j} _A \otimes \ket{b_j}_E
+\eeq
+where $\ket{b}_j$ is some orthonormal basis on $E$. These are unique up to a unitary. Then, 
+\beq
+\rho_A = \mbox{Tr}_E \left[ \ket{\psi}_{AE} \bra{\psi}_{AE} \right]
+\eeq
+
+\end{description}
+
+\subsection{Entanglement based QKD}
+\begin{description}
+\item[Key idea] Instead of Alice sending a state to Bob, there is a source between Alice and Bob that sends them each a subsystem of an entangled pair. 
+
+\item[Equivalence to BB84] Because we can view this as steering through measurement, since Alice effectively prepares the state by measuring it `first', it is equivalent to he protocol we considered above. 
+
+\item[Differences] Since Alice and Bob always obtain the same density matrix $\rho_{AB}$ from the source, they can perform state tomography until they learn what the state is. 
+
+Now, instead of measuring in a random basis, once state tomography has been performed, Alice and Bob measure in a basis that minimises the correlations with Eve. 
+
+\item[Eve has the purification], that is, Eve has the state $\rho_E$ such that global state is $\ket{\psi}_{ABE}$. This is the best attack that Eve can perform. 
+
+\item[Eve's conditional states] Eve's state conditioned on Alice's classical information is
+\beq
+\rho_{E|x} = \bra{x} \rho_{AE} \ket{x}
+\eeq
+Then, Eve performs state discrimination to learn $x$. 
+
+\item[Joint distribution] which determines which values Alice and Bob obtain is
+\beq
+P(x,y) = \bra{xy} \rho_{AB} \ket{xy}
+\eeq
+for some classical value for $x$ and $y$. 
+
+\item[Rate for entanglement based QKD] is
+\beq
+r = H(X|E) - H(X|B)
+\eeq
+
+\end{description}
+\subsection{Collective Attacks}
+\begin{description}
+
+\item[Key idea] The global attack is the most general attack, provided that $\rho^{\otimes N}_{AB}$ is i.i.d. The final key generally depends on correlations between bits in the raw key. If Eve only measures single bits, this information gets diluted. Hence, the global attack is the best attack. 
+
+\item[Global state] instead of considering every single $\rho_{AB}$ state, we consider all the states sent to Alice and Bob, $\rho_{AB}^{\otimes N}$. This scheme relies on that the same state $\rho_{AB}$ is sent every time. 
+
+\item[Global purification] if the system is i.i.d. we can choose the global purification as $\ket{\psi}_{ABE}^{\otimes N}$. 
+
+\item[Rate bound] given by 
+\beq
+r \geq I(X:Y) - I(X:E)
+\eeq
+
+\item[Classical-Quantum State] that Alice and Eve share (and that exists after Alice has performed a measurement) is given by 
+\beq
+\rho_{AE} = \sum_x P(x) \ket{x}\bra{x} \otimes \rho_{E|x}
+\eeq
+That is, Eve is holding a quantum state conditioned on the classical outcome of Alice's measurement $x$. 
+
+\item[Mutual information of global attack] is given by 
+\beq
+I(X:E) = S(\rho_E) - \sum_x P(x) S(\rho_{E|x})
+\eeq
+
+\end{description}
+\subsection{General attacks and the de-Finetti Theorem}
+\begin{description}
+\item[Assumption for general attacks] The only assumption we make is that Alice and Bob observe statistics compatible with the global state $\rho^{(N)}_{ABE}$. This can be a completely arbitrary state, as can the measurements that Alice and Bob perform. 
+
+\item[Notation for global states] Note that the state $\rho_{AB}^{\otimes N}$ is different from $\rho_{AB}^{(N)}$. The first state is a collection of identical states, whereas the second state exists in a Hilbert spaces as large as $\rho^{\otimes N}_{AB}$ but it is not necessarily i.i.d. distributed over it. 
+
+\item[Protocol symmetries] every of the $N$ states treated in the protocol is treated on an equal footing. 
+
+\item[The effect of averaging] If Alice and Bob take the states and perform a random unitary, and then forget the outcome, it doesn't change the protocol. Applying a random unitary and forgetting the outcome essentially means that we are mixing the state. Thus, we can treat every state in the protocol as the maximally mixed state. 
+
+Incidentally, this means that the state $\rho^{(N)}_{AB}$ is symmetric under the exchange of pairs (that is, we could swap any of the $\rho_{AB}^i$ states in the protocol and still be fine). 
+
+\item[The de-Finetti Theorem] (simplified) if $\rho^{(N)}$ is a symmetric state of $N$ systems and $\rho^{(M)}$ is the reduced state for $M<N$ of the $N$ systems, then 
+\beq
+\norm{\int \mathrm{d}\sigma P(\sigma) \sigma^{\otimes M} - \rho^{(M)} }_1 \leq 2^{- (N-M)}
+\eeq
+where $P(\sigma)$ is a probability distribution over single-system density matrices. 
+
+Interpretation: After discarding a small fraction of the $N$ states, the remaining state is approximately i.i.d. It massively simplifies our analysis, because Alice and Bob could simply randomly throw away states until they are sure to have a key created by an i.i.d. setting. Then, they can gain the general rates showed above. 
+
+\end{description}
+\section{Post-Shannon Information Theory}
+\begin{description}
+\item[Quantum memories] can be used by the adversary to store her quantum system until she is ready to measure it. The advantage is that Alice and Bob might in the future use their secret key in ways that will reveal information about it. 
+
+\item[State before Eve measures] is given by
+\beq
+\rho^{real} = \sum_{k, k', s} P(k,k',x) \ket{k}\bra{k}_A \otimes \ket{k'}\bra{k'}_B \otimes \ket{s}\bra{s}_E \otimes \rho_{E|k,k',s}
+\eeq
+Here, $k$ and $k'$ are the two keys, and $\ket{s}$ is any public message that Alice and Bob sent. 
+
+\item[The ideal key] holds no entanglement with Eve. That is, 
+\beq
+\rho^{ideal} = \left( \sum_k \frac{1}{|\cal{K}|} \ket{k}\bra{k}_A \otimes \ket{k}\bra{k}_B \right) \otimes \left( \sum_s P(s) \ket{s}\bra{s}_E \otimes \rho_{E|s} \right)
+\eeq
+
+\item[Highest security conditions] can be written 
+\beq
+\norm{\rho^{real} - \rho^{ideal} }_1 \leq \epsilon
+\eeq
+
+\item[Renner-Koenig Theorem] states that 
+\beq
+\norm{\rho^{real} - \rho^{ideal} }_1 \leq \sqrt{2}^{S- N\left[ I (X:Y) - I(X:E) \right]}
+\eeq
+Consequences: It is indeed possible to come very close to the ideal state. It is really only limited by $S$, so if Alice and Bob keep their public communication to a minimum, it is possible to create a secret key. This means creating a smaller secret key. 
+
+Question: Do you run into a trade-off with Shannon's theorem here? Shannon's Theorem states that the key must be as long as the message for good security, but if we make a short key and want to use it for a long message, then we risk being detected. 
+
+I guess this tells us that we can't both have the cake and eat it - the more you communicate in public, the more likely it is that you will have the key compromised. 
+
+\end{description}
+\section{Non-Local Correlations}
+\subsection{Classical, Quantum and Beyond}
+\begin{description}
+\item[No-signalling condition] for a probability distribution $P(a, b|x,y)$
+\beq
+P(b|y) = \sum_a P(a, b|x,y) = \sum_a P(a,b|x', y)
+\eeq
+and
+\beq
+P(a|x) = \sum_b(a,b|x,y) = \sum_b P(a,b|x,y')
+\eeq
+for all $x,x',b$. That is, since the distributions are conditioned on $x,y$ the marginals must be independent on the output value of $x$ and $y$. That is, $a$ or $b$ should depend only on their partner input \emph{not} on any output that happens far away. 
+
+Put differently, we require
+\beq
+\sum_a P(a,b|x,y) = P(b|y)
+\eeq
+Tracing out the input $a$ also ensures that the outcome $x$ cannot influence the probability distribution. 
+
+
+\item[Set of non-signalling correlations is convex] we can show that if $P(a,b|x,y)$ is non-signalling, then so is 
+\beq
+qP_1(a,b|x,y) + (1-q)P_2(a,b|x,y)
+\eeq
+
+Question: Should we not make sure that the variables $a,b,x,y$ are different? 
+
+Answer: If we show different variables, then the comparison is useless. 
+
+\item[Non-signalling finite points] are finite. That is, the polytope that forms the non-signalling set has a finite number of extreme points. 
+
+\item[Polytope] $\cal{P}$ can be defined in terms of generators $\{e_1\ldots e_n\}$ or in terms of linear inequalities, $\{ \vv{c}_1 \ldots \vv{c}_m\}$, such that 
+\beq
+\cal{P} = \mbox{conv}\{\vv{e}_1 \ldots \vv{e}_n\} = \left\{ \sum_i p_i \vv{e}_i : p_i \geq 0, \sum_i p_i = 1\right\}
+\eeq
+That is, we can use the generators, the \emph{extremal points} and add them in various ways using the set $\{p_i\}$, so that they form any point in $\cal{P}$. $\cal{P}$ is then the set of all points (I think). 
+
+For inequalities, we write
+\beq
+\cal{P} = \{ \vv{x} : \vv{c}_1 \cdot \vv{x} \leq 1 , \ldots \vv{c}_m \cdot \vv{x} \leq 1 \}
+\eeq
+That is, we describe the bounds of the polytope (its edges) in terms of the inequalities. 
+
+Note that there are not as many generators as inequalities. 
+
+\item[Local correlations] can be written
+\beq
+P(a,b|x,y) = \sum_\lambda P(\lambda) P(a|x,\lambda) P(b|y,\lambda)
+\eeq
+That is, along with one `cause', $x$, $\lambda$ also determines the value of $a$ or $b$. $\lambda$ is an example of a hidden variable. 
+
+\item[Generators for local correlations] the set of local correlations is generated by the \emph{extremal points}, 
+\beq
+P_{fg} (a,b|x,y) = \delta^a_{f(x)} \delta^b_{g(y)}
+\eeq
+where the functions $f$ and $g$ map input to output. That is, $f:\cal{X} \rightarrow \cal{A}$ and $g: \cal{Y} \rightarrow \cal{B}$. Choosing a function will denote which point (or boundary) that we are dealing with. 
+
+The defining feature of an extreme point is that it cannot be written as a mixture of other points. It has to be one single element of weight 1. 
+
+\item[Local extremal points] There are 16 local extremal points (generators) for the bipartite case. They are given by 
+\beq
+P(a,b|x,y) = \delta^a_{f(x)} \delta^b_{g(y)}
+\eeq
+for all pairs of  binary functions $f,g: \{0,1\} \rightarrow \{0,1\}$. These functions can be constant, even or odd. 
+
+\item[Decomposing conditional distributions] we find that
+\beq
+P(a|x,\lambda) = \sum_f P(f|\lambda) \delta^1_{f(x)}
+\eeq
+That is, the conditional probability $P(f|\lambda)$ acts as a weight for the extremal points, specified entirely by $\delta^a_{f(x)}$. Note that everything will always be conditioned on $\lambda$, as this is our local variable. 
+
+Question: Should $P(f|\lambda)$ here be $P(f(x)|\lambda$? 
+
+\item[Local distribution in terms of generators] we find
+\begin{align}
+P(a,b|x,y) &= \sum_\lambda P(\lambda) P(a|x,\lambda) P(b|y, \lambda) \mbox{     using Baye's Theorem} \nonumber \\
+&= \sum_{\lambda, f, g} P(\lambda) P(f|\lambda) \delta^a_{f(x)} P(g|\lambda) \delta^b_{g(y)} \mbox{     using generators} \nonumber \\
+&=\sum_{f,g} P(f,g) \delta^a_{f(x)} \delta^b_{g(y)}  \mbox{     defining new }\bar{\lambda} = (f,g)
+\end{align}
+
+Question: I could not prove that indeed
+\beq
+P(f,g) = \sum_\lambda P(\lambda) P(f|\lambda) P(g|\lambda)
+\eeq
+
+\item[Quantum correlations] definition: There exists a state $\rho_{AB}$ and measurement operators $A_x^a B_y^b$ such that 
+\beq
+P(a,b|x,y) = \trace{A^a_x \otimes B^b_y \rho_{AB} }
+\eeq
+
+
+\item[Set of quantum correlations] has an infinite number of extremal points. The only fully known and characterised set of quantum points arises for the bipartite case. 
+
+\item[Correlation function] defined by 
+\beq
+C_{x,y} = \sum_{a,b} (-1)^{a + b} P(a,b|x,y)
+\eeq
+
+\item[Binary correlation function] gives
+\beq
+C_{x,y} = P(a = b|x,y) - P(a\neq b|x,y)
+\eeq
+It takes the values $C_{x,y} \in[-1,1]$. 
+
+\item[Non-signalling condition for correlation functions] given by
+\beq
+P(a,b|x,y) = \biggl\{ \bpmat \frac{1 + C_{xy}}{4} \mbox{   if } a = b \\ 
+\frac{1 - C_{xy} }{4} \mbox{ if } a \neq b\epmat
+\eeq
+which has uniform marginals for Alice and Bob
+\beq
+P(a|x) = P(b|y) = \frac{1}{2}
+\eeq
+for all values of $a,b,x,y$. 
+
+\item[How to check non-signalling] Make sure that the marginals  only depend on one single output value!
+
+\item[CHSH inequalities] given by the 8 expressions:
+\beq
+- 2 \leq C_{00} \pm C_{01} \pm C_{10} \pm C_{11} \leq 2
+\eeq
+where we shift one single minus sign around. 
+
+\item[T'sirelson's bound] given by 
+\beq
+- 2\sqrt{2} \leq C_{00} \pm C_{01} \pm C_{10} \pm C_{11} \leq 2\sqrt{2}
+\eeq
+If this condition is fulfilled, the correlations are \emph{quantum} and not just non-local. 
+
+\item[PR-boxes] generate maximally non-local correlations. They obey the distribution
+\beq
+P_{PR} (a,b|x,y) = \biggl\{ \begin{pmatrix} \frac{1}{2} \mbox{ if } a\oplus b = xy \\
+0 \mbox{  otherwise} \end{pmatrix}
+\eeq
+There are 8 extremal points for the PR boxes. They form tetrahedrons on the local polytope. 
+
+\end{description}
+\subsection{Monogamy of non-local correlations}
+\begin{description}
+
+\item[Proof by contradiction] Start with a 3-party distribution $P(a,b,e|x,y,z)$ such that its marginals are the maximally non-local PR-box
+\beq
+\sum_e P(a,b,e|x,y,z) = P_{RP} (a,b|x,y)
+\eeq
+That is, Alice and Bob are holding a PR box between them. The question is: Is Eve also part of the non-local correlations? 
+
+Using Bayes rule, write
+\beq
+\sum_e P(e|z) P(a,b|x,y,e,z) = P_{PR}(a,b|x,y)
+\eeq
+The fact that 
+\beq
+P(a,b,e|x,y,z) = P(e|z) P(a,b|x,y,e,z) 
+\eeq
+by Bayes Rule should be understood from the fact that $e$ is conditioned on $z$ always, and thus any marginal $P(e)$ has to be $P(e|z)$. Alternatively, the situation would be the same if we ignored the entire conditioning. 
+
+However, the above is a contradiction. Since $P_{PR}(a,b|x,y)$ is an extremal points, it cannot be made up of several distributions. Thus, we find
+\beq
+P(a,b|x,y,e,z) = P(a,b|x,y)
+\eeq
+for all values of $e$ and $z$. This implies that 
+\beq
+P(a,b,e|x,y,z) = P(a,b|x,y) P(e|z)
+\eeq
+And so if Alice and Bob share correlations, Eve cannot be correlated to either Alice or Bob. 
+
+Question: So if Alice and Bob share a purely entangled pair, Eve cannot have any information. Thus, I guess it is advisable for Eve, when she distributes the entangled states, to always give them a slightly faulty state. I believe that this is what has been shown in the noisy channel above. 
+
+
+\item[Monogamy of pure state entanglement] There exists a simple argument for the entanglement sharing of pure states. Say that $\rho_{AB}$ is an entangled pure state. Let is be part of a larger system. Now, if the larger system is to be correlated to $\rho_{AB}$ needs to be a mixed state, but it is by assumption pure. Thus, there can be no correlations between $\rho_{AB}$ and a larger system. 
+
+\item[2-shareable distribution] a distribution is $2$-shareable (with respect to Bob) if exists a 3-party non-signalling distribution such that 
+\beq
+\sum_{b_1} = P(a,b_1, b|x, y_1, y) = P(a,b|x,y)
+\eeq
+\beq
+\sum_{b_2} P(a, b, b_2| x,y,y_2) = P(a,b|x,y)
+\eeq
+That is, the resulting distribution is the marginal distribution for two different distributions when Bob has more than 1 measurement input and output. 
+
+\item[2-Shareability Theorem]: If Bob has a 2-shareable function, he can prove that it satisfies all Bell inequalities with just two measurements. 
+
+Proof. Assume that Bob has two measurement input $b_1$ and $b_2$, along with two measurement outcomes $y_1$ and $y_2$. Then, we can write
+\beq
+P8a,b|x,y) = \sum_{b_1, b_2} P(b_1 , b_2|0,1) P(a|x,b_1, b_2, 0,1) \delta^b_{b_1 \delta^0_y + b_2 \delta^1_y}
+\eeq
+
+Question: I don't see where this comes from. Also, I don't see how it relates to 2-shareability. 
+
+Then, use $\lambda = (b_1, b_2)$ to get
+\beq
+P(a,b|x,y) = \sum_\lambda P(\lambda) P(a|x,\lambda) P(b|y,\lambda)
+\eeq
+which shows that the distribution is local. 
+
+\item[$k$-shareable distributions] satisfies all Bell measurements if Bob has $k$ measurements on his side. 
+
+Question: is it that the distribution is non-local if Bob has fewer measurements? Or is it still local, but we cannot determine it? 
+
+\item[Symmetrising correlations] can be done without losing non-locality. 
+
+\item[Noisy PR-boxes] satisfy the following distribution:
+\beq
+P_\nu (a,b|x,y) = \begin{cases}
+\frac{1-\nu}{2} \text{   if $a\oplus b = xy$} \\
+\frac{\nu}{2} \text{  otherwise}
+\end{cases}
+\eeq
+where $\delta$ is a noise parameter. For certain values of $\nu$, the distribution leaves the non-local domain and enters the local polytope. 
+
+Since this is not an extremal point any more, we can write it in terms of a PR box. 
+
+\beq
+P_\nu (a,b|x,y) = (1-2\nu) P_{PR} (a,b|x,y) + 2\nu \frac{1}{4}
+\eeq
+
+\item[Symmetry of noisy PR box] can be seen by the fact that 
+\beq
+C_{00} + C_{01} + C_{10} - C_{11} = 1-2\nu
+\eeq
+This cover the full classical-quantum-beyond range for different values of $\nu$. 
+
+
+\item[Binary monogamy] consider a distribution $P(a,b,e|x,y,z)$ with binary variables. Then, at most one of the marginals $P(a,b|x,y)$ or $P(a,e|x,z)$ is non-local. 
+
+That is, if Alice and Bob share a non-local correlation, Eve cannot be correlated with Alice as well. 
+
+\item[No-cloning theorem] for a general non-local distribution. Imagine that we start with a non-local distribution $P(a,b|x,y)$. If Alice measures on her side, using some setting $a$, she prepares the following distribution for Bob
+\beq
+P(b|y,a,x)
+\eeq
+Then, let Bob attempt to clone the distribution. In some frame, Bob will do so before Alice performs the measurement. So, in some frame, Bob gets the distribution, 
+\beq
+P'(b_1, b_2, a |y_1,y_2, x) = P''(b_1, b_2 |y_1, y_2, a, x) P(a|x)
+\eeq
+Note that marginalising out either $b_1,y_1$ or $b_2,y_2$ would yield two separate distributions that otherwise are the same (depend on the same $a$ and $x$). That is, the distribution satisfies
+\beq
+P'(b_1, a|y_1, x) = P'(b_2, a|y_2, x) = P(b|y,a,x)
+\eeq
+However, $P(b|y,a,x)$ is non-local. By the monogamy of correlations, we see that all three cannot be non-local. This means that either the original distribution $P(b|y,a,x) $ is local, or the cloning is forbidden. 
+
+\end{description}
+\section{Device-Independent QKD}
+\begin{description}
+\item[Assumption] The parties are restricted by the no-signalling requirement. Otherwise, they can be as non-local as they like. 
+
+\item[Key idea] Before, we worked out this protocol in terms of states and operators. However, since any state produced by a device might be corrupted, we wish to describe the entire formalism using probability distribution. That is, the formalism is device independent if we have security without the requirement that the quantum devices are trustworthy. 
+
+\item[Rewriting the distribution] in terms of one PR box and several local points. Start with the symmetric distribution. 
+\beq
+P_\nu (a,b|x,y) = \begin{cases}
+\frac{1-\nu}{2} \text{   if $a\oplus b = xy$} \\
+\frac{\nu}{2} \text{  otherwise}
+\end{cases}
+\eeq
+Then, use $C = 1-2\nu$, to write
+\beq
+P_\nu (a,b|x,y) = (1-4\nu)P_{\nu = 0}(a,b|x,y) + 4\nu P_{\nu = 1/4}(a,b|x,y)
+\eeq
+Since $\nu = 1/4$ is the fully classical value, we can write that in terms of the 8 local points. So, 
+\beq
+P_\nu (a,b|x,y) = (1-4\nu)P_{\nu = 0}(a,b|x,y) + 4\nu \frac{1}{8} \sum^8_{t = 1} \delta^a_{f_t(x)} \delta^b_{g_t(y)}
+\eeq
+
+\item[Optimal individual attack] Given that Alice and Bob share a noisy probability distribution $P_\nu (a,b|x,y)$, the optimal attack has global distribution $P(a,b,e|x,y,z)$. This has extremal points at 
+\beq
+\{P(z,b|x,ye,z)\} \forall e
+\eeq
+That is, the points that Eve gives Alice and Bob are, to her, extremal. Alice and Bob can't really tell. They don't know Eve's component. 
+
+
+Question: Is this similar to when Eve holds the purification to Alice's and Bob's state? 
+
+Proof: Assume the opposite, that $P(a,b|x,y,e,z)$ is made up of a mixture of other extremal points $P_i(a,b|x,y,e,z)$
+\beq
+P(a,b|x,y,e,z) = \sum_i P(i|e,z) P_i(a,b|x,y,e,z)
+\eeq
+Here, $P(i|e,z)$ is the weight. 
+Then, it follows that we can write
+\beq
+P(a,b,e,i|x,y,z) = P_i (a,b|x,y,e,z) P(i|e,z) P(e|z)
+\eeq
+is non-signalling. 
+
+Question: I didn't really manage to come up with a good proof of this. 
+
+If Eve has this distribution and knows both $i$ and $e$, she can ignore $i$, because the distribution has extremal conditional distributions $P(a,b|x,y,z,e,i)$. So it doesn't matter which extremal point we have, just the knowledge that it is an extremal point suffices (I think). This enables us to write
+\beq
+P8a,b,e|x,y) = (1-4\nu) P_{PR} (a,b|x,y) \delta^0_e + 4 \nu \frac{1}{8} \sum^8_{t = 1} \delta^a_{f_t(x)} \delta^b_{g_t(y)} \delta^t_e
+\eeq
+That is, we treat the $0$ point as the PR box point, and every other point is distributed. 
+
+If Eve knows $x$, then she also knows $a$ with probability $4\nu$, and knows nothing with probability $1-4\nu$. That is, Eve can know the local correlations perfectly, but can learn nothing from the PR box. 
+
+Question: I still do not see how this shows that the extremal points make up the optimal attack. 
+
+Thus, the best attack would be for Eve to simulate, say, quantum mechanics, while still having access to the local correlations and the PR box. 
+
+\item[Secret key rate] for device independent QKD is
+\beq
+r = 1-4D-h(D)
+\eeq
+\end{description}
+\subsection{Characterising the set of quantum correlations}
+\begin{description}
+\item[Key idea] We want to know what sets quantum correlations apart from beyond-quantum correlations 
+
+\item[Ingredients of QM] In quantum mechanics, we define a correlation function as
+\beq
+C_{xy} = \trace{\rho_{AB} A_x \otimes B_y}
+\eeq
+where $A_x$ and $B_y$ are operators with eigenvalues $\pm1$. 
+
+\item[Deriving T'sirelson's Bound] we define two matrices, 
+\beq
+(M_1, M_2, M_3, M_4) = (A_0\otimes I, A_1 \otimes I, I\otimes B_0, I\otimes B_1)
+\eeq
+and
+\beq
+Q_{ij} = \trace{\rho_{AB} M_i M_j}
+\eeq
+Both $M_i$ and $Q$ are Hermitian. 
+
+Since $M_i$ has only $\pm1$ eigenvalues, $M_i^2 = I$, since it is the only matrix with only $+1$ eigenvalues. Thus, we can write
+\beq
+Q = \bpmat 1 & \alpha & C_{00} & C_{01} \\
+\bar{\alpha} & 1 & C_{10} & C_{11} \\
+C_{00} & C_{01} & 1 & \beta \\
+C_{10} & C_{11} & \bar{\beta} & 1  \epmat
+\eeq
+where
+\beq
+\alpha = \trace{\rho_{AB} A_0 A_1 \otimes I}
+\eeq
+\beq
+\beta = \trace{\rho_{AB} \identity \otimes B_0 B_1 }
+\eeq
+
+\item[Theorem for distinguishing QM] If the correlations $C_{xy}$ are quantum, then there are two real numbers $\alpha, \beta$ such that $Q$ is positive semi-definite. 
+
+Proof: Choosing a symmetric scenario where
+\beq
+C_{00} + C_{01} + C_{10} - C_{11} = C
+\eeq
+we can solve for the eigenvalues of the matrix. Requiring that they are all zero or above yields
+\beq
+4(\alpha^2 \beta^2 + 4C^4) \leq 4
+\eeq
+Minimising with respect to $\alpha$ and $\beta$ gives
+\beq
+C \leq \frac{1}{\sqrt{2}}
+\eeq
+which is T'sirelson's bound. 
+
+
+
+\end{description}
+\end{document}
