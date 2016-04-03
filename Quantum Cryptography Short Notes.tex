@@ -113,7 +113,9 @@ This is the final failure probability. Note that orthogonal states have zero fai
 
 \item[Symmetries] Eve will use symmetries in her attack that match those in Alice's and Bob's protocol. That is, it is symmetric under $0 \leftrightarrow 1$ and $Z \leftrightarrow X$. 
 
-Question: I am not entirely sure what the symmetries mean. The $Z-X$ symmetry means that the disturbance should the same regardless of the axis that Eve chooses. 
+Question: I am not entirely sure what the symmetries mean. The $Z-X$ symmetry means that the disturbance should be the same regardless of the axis that Eve chooses. 
+
+Answer: By symmetries, we mean that Eve doesn't make a difference between which axis Alice and Bob use. That is, Eve chooses not to favour a particular axis. The information she gets from each qubit is the same. 
 
 \item[The optimal attack] is a symmetric attack where Eve lets her quantum system interact with the states that Alice and Bob send through the channel. Eve will wait until Alice and Bob publish the measurement bases that they used, so that we then will have to distinguish the states that she has. For example, if Alice prepares in the $Z$ basis, Eve will have to distinguish the states
 \begin{align}
@@ -179,12 +181,50 @@ becomes
 \Omega(\nu(x)) = \sqrt{\frac{2\pi N}{\prod_x 2 \pi N \nu(x) }} 2^{NH(\nu)}
 \eeq
 
+
+\item[Alternative derivation of Shannon entropy]
+Start with what we had before. Given an alphabet $X = X_1 X_2 \ldots X_d$ of length $d$, the probability of sampling $X = x_1$ a number of $N(x_1)$ times is
+\beq
+P(x_i) = \frac{N(x_i)}{N}
+\eeq
+in a sequence of $N$ symbols. 
+
+As before, the total number of sequences is
+\beq
+\Omega(P(x)) = \bpmat N\\ N(x_1) \ldots N(x_d) \epmat = \frac{N!}{\prod_x N(x)!}
+\eeq
+We wish to derive an expression that tells us the order of magnitude of $\Omega$. To get a sense of this, we take the logarithm.
+\beq
+\log{\Omega} =  \log{N!} - \log{\prod_x N(x)!} = \log{N!} - \sum_x \log{N(x)!}
+\eeq
+If we then use Sterling's approximation:
+\beq
+\log{n!} = n\log{n} - n + \mathcal{O}( \log{n})
+\eeq
+We find
+\begin{align}
+\log{\Omega} &= N \log{N} - N - \sum \left( N(x) \log{N(x)} - N(x) \right) \nonumber \\
+&= N \log{N} - \sum_x N(x) \log{N(x)} - N +\sum_x N(x) \nonumber \\
+&= N \log{N} - \sum_x NP(x) \log{P(x) N} - N + \sum_x NP(x) \nonumber \\
+&= N\log{N} - \sum_x NP(x) \log{P(x)}	- \sum_x NP(x) \log{N} - N +N \nonumber \\
+&= N \log{N} - \sum_x NP(x) \log{P(x)} - N\log{N} \nonumber \\
+&= - \sum NP(x) \log{P(x)} \nonumber \\
+&= NH(X)
+\end{align}
+Thus, if we use a logarithm of base 2, we have a number of 
+\beq
+2^{NH(X)}
+\eeq
+sequences. 
+
 \item[Shannon entropy] defined as
 \beq
 H(\nu) = H(X) = - \sum_x \nu(x) \log{\nu(x)}
 \eeq
 
 Question: Why are we considering the relative frequency here, instead of the probability distribution?  After all, isn't frequency dimension-full? Well, not in this case because we have defined everything in terms of numbers. 
+
+Attempt at answer: Perhaps because we are trying to imagine some experimental situation. It is more physical to describe something in terms of an observed relative frequency $\nu(x)$ than it would be to input the actual, true probability distribution that we don't actually know. 
 
 \item[Probability of sampling] the probability that a sequence with frequency $\nu(x)$ is sampled from a source with distribution $q(x)$ is
 \beq
@@ -199,11 +239,22 @@ So the combined probability to the power of the number of letters that we get?
 
 Question: This is not clear to me. 
 
+Answer: Rewrite the above as
+\beq
+ = \Omega(\nu) \prod_x q(x)^N(x)
+ \eeq
+ which is
+ \beq
+ \mbox{total no. of sequences with } \nu(x) \times \mbox{coming up with that particular frequency?
+}
+\eeq
+
+
 \item[Relative entropy] defined as
 \beq
 D(\nu|q) = \sum_x \nu(x) \log{\frac{\nu(x)}{q(x)}}
 \eeq
-
+It is a measure of the difference between the two relative frequencies $\nu(x)$ and $q(x)$. 
 
 \item[Infinitesimal variations] if there is a small difference between the entropies such that
 \beq
@@ -287,7 +338,7 @@ Recall that $Z$ is the entire distribution of $z$, it is the set of possible val
 
 Note that we say that Eve's sequence is different from the ideal sequence because of real world Gaussian sampling etc. (I think this is the reason). 
 
-\item[Compression to restrict information] Let Alice compress her information $(x_1, \ldots x_N) \rightarrow (k_1 \ldots k_M)$ so that Eve's distribution $(\bar{z}_1 \ldots \bar{z}_N$ using some function $f$. 
+\item[Compression to restrict information] Let Alice compress her information $(x_1, \ldots x_N) \rightarrow (k_1 \ldots k_M)$ so that Eve's distribution $(\bar{z}_1 \ldots \bar{z}_N)$ using some function $f$. 
 
 Let $f$ be uniform. Then, the probability of it mapping two specific sequences $(x_1 \ldots x_N)$ into the same $(k_1 \ldots k_M)$ is $2^{-M}$. That is because there are $2^M$ typical sequences. So, given that I have already mapped one sequence to the sequence $k_1 \ldots k_M$, the probability that I choose another one to map to the same sequence is $2^{-M}$. 
 
@@ -362,6 +413,7 @@ H(X|E) - H(X|Y)
 \eeq
 This s the number of perfect secret bits per raw bit sent sent in QKD. 
 
+Interpretation: $H(X|E)$ denotes how uncertain Eve is about $X$, given that she has information $E$. We want to maximise this, so that Eve knows as little as possible. $H(X|Y)$ denotes how uncertain Bob is about $X$ given that he knows $Y$. We want Bob to be as certain as possible, so we aim to minimise this quantity. Together, these two steps will maximise the rate. 
 \end{description}
 
 \subsection{Secret key rate of BB84}
@@ -545,8 +597,9 @@ That is, we can use the generators, the \emph{extremal points} and add them in v
 
 For inequalities, we write
 \beq
-\cal{P} = \{ \vv{x} : \vv{c}_1 \cdot \vv{x} \leq 1 , \ldots \vv{c}_m \cdot \vv{x} \leq 1 \}
+\mathcal{P} = \{ \textbf{x} : \textbf{c}_1 \cdot \textbf{x} \leq 1 , \ldots \textbf{c}_m \cdot \textbf{x} \leq 1
 \eeq
+
 That is, we describe the bounds of the polytope (its edges) in terms of the inequalities. 
 
 Note that there are not as many generators as inequalities. 
@@ -705,7 +758,7 @@ which shows that the distribution is local.
 
 Question: is it that the distribution is non-local if Bob has fewer measurements? Or is it still local, but we cannot determine it? 
 
-\item[Symmetrising correlations] can be done without losing non-locality. 
+\item[Symmetrising correlations] can be done without losing non-locality. This can be thought of as moving from some point within the non-local region of the polytope towards the middle. 
 
 \item[Noisy PR-boxes] satisfy the following distribution:
 \beq
@@ -721,6 +774,8 @@ Since this is not an extremal point any more, we can write it in terms of a PR b
 \beq
 P_\nu (a,b|x,y) = (1-2\nu) P_{PR} (a,b|x,y) + 2\nu \frac{1}{4}
 \eeq
+
+This allows us to go all the way from classical to quantum. 
 
 \item[Symmetry of noisy PR box] can be seen by the fact that 
 \beq
@@ -859,6 +914,28 @@ Minimising with respect to $\alpha$ and $\beta$ gives
 C \leq \frac{1}{\sqrt{2}}
 \eeq
 which is T'sirelson's bound. 
+
+
+
+\end{description}
+
+\section{Notes from Past Exam and Problem Sheet}
+\begin{description}
+\item[Finding the purification] Quick recipe. If given the state
+\beq
+\rho_{AB} = \alpha \ket{\Psi}\bra{\Psi} + \beta \identity
+\eeq
+where $\beta$ include the normalisation of the maximally mixed state. Then, the purification is most easily obtained by finding the state $\ket{\Psi_\perp}$ that is orthogonal to $\ket{\Psi}$. Once that has been found, the state will be
+\beq
+\rho_{AB} = \frac{\beta}{\beta -1} \ket{\Psi}\bra{\Psi} + \beta \ket{\Psi_\perp} \bra{\Psi_\perp} + \beta \left( \ket{01}\bra{01} + \ket{10}\bra{10} \right)
+\eeq
+
+And finally, the purified state will be
+\beq
+\ket{\psi}_{ABE}= \sqrt{\frac{\beta}{\beta-1} } \ket{\Psi} _{AB}\ket{E_1}_E + \sqrt{\beta} \ket{\Psi_\perp}_{AB} \ket{E_2} + \beta \ket{01}_{AB} \ket{E_3} + \sqrt{\beta} \ket{10}_{AB} \ket{E_4}_E
+\eeq
+
+
 
 
 
